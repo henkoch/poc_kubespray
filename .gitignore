@@ -1,4 +1,5 @@
 private_*
 .terraform*
 terraform.tfstate*
-
+kubespray-venv
+kubespray

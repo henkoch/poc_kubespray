@@ -1,0 +1,2 @@
+cluster_name: aws-k8s
+kube_version: v1.28.1

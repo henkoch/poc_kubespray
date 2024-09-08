@@ -90,20 +90,37 @@ resource "aws_security_group" "allow_ssh" {
 # Key Pair (Make sure you already have a key or create one via AWS Console)
 resource "aws_key_pair" "kubespray_key" {
   key_name   = "kubespray-key"
-  public_key = file("./private_admin_id_rsa.pub")
+  public_key = file("./private_admin_id_ed25519.pub")
 }
 
 # EC2 Instances
 resource "aws_instance" "kubespray_instance" {
   count         = 4
-  ami           = "ami-0c6da69dd16f45f72"  # Amazon Linux 2023 AMI
+  # ami           = "ami-0c6da69dd16f45f72"  # Amazon Linux 2023 AMI
+  ami           = "ami-01427dce5d2537266" # Debian 12
+  # instance_type = "t3.micro" # TODO later try if two micro instances can be used with two small.½
+  instance_type = "t3.small" # Minimum for control plane nodes: https://github.com/kubernetes-sigs/kubespray/blob/master/README.md
+  subnet_id     = aws_subnet.kubespray_subnet.id
+  key_name      = aws_key_pair.kubespray_key.key_name
+  vpc_security_group_ids = [aws_security_group.allow_ssh.id]
+  associate_public_ip_address = true
+
+  tags = {
+    Name = "kubespray-instance-${count.index}"
+    project = var.project_tag
+  }
+}
+
+resource "aws_instance" "installer_instance" {
+  ami           = "ami-01427dce5d2537266" # Debian 12
   instance_type = "t3.micro"
   subnet_id     = aws_subnet.kubespray_subnet.id
   key_name      = aws_key_pair.kubespray_key.key_name
   vpc_security_group_ids = [aws_security_group.allow_ssh.id]
+  associate_public_ip_address = true
 
   tags = {
-    Name = "kubespray-instance-${count.index}"
+    Name = "installer-instance"
     project = var.project_tag
   }
 }
